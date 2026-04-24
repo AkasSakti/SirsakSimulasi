@@ -10,7 +10,7 @@ from urllib.parse import unquote
 # LINK CSV GOOGLE SHEET
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1k5WjvGAOv30qMrOaJaxlyNhjQaN-x5-yeUIbOCPC25s/export?format=csv&gid=782361382"
 
-@st.cache_data
+@st.cache_data(ttl=60)
 def load_data():
     return pd.read_csv(SHEET_URL, dtype=str)
 
@@ -30,7 +30,12 @@ def normalize(phone):
     return phone
 
 def format_sir_point(sir_point):
+    if pd.isna(sir_point):
+        return "lokasi belum tersedia"
     sir_point = str(sir_point).strip()
+    if not sir_point or sir_point.lower() == "nan":
+        return "lokasi belum tersedia"
+    sir_point = sir_point.strip('"')
     match = re.search(r"/maps/place/([^/@?]+)", sir_point)
     if match:
         return unquote(match.group(1)).replace("+", " ")
