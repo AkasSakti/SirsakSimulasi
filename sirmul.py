@@ -16,7 +16,7 @@ def load_data():
 
 df = load_data()
 
-st.title("Smart Trash - QR Generator")
+st.title("SircleBox - QR Generator")
 
 # ===== NORMALISASI NO HP =====
 def normalize(phone):
