@@ -87,7 +87,9 @@ if phone:
 
         sir_point = format_sir_point(user_data.get("Sir_Point", ""))
         st.success(f"Terimakasih {user_data['Nama']} telah membuang sampah di SirclePoint {sir_point}")
-        st.image(buf)
+        _, qr_col, _ = st.columns([1, 2, 1])
+        with qr_col:
+            st.image(buf)
 
         # Optional debug
         st.caption(qr_data)
