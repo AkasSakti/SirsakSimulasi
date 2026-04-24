@@ -4,6 +4,7 @@ import qrcode
 from io import BytesIO
 import random
 import string
+import re
 
 # LINK CSV GOOGLE SHEET
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1k5WjvGAOv30qMrOaJaxlyNhjQaN-x5-yeUIbOCPC25s/export?format=csv&gid=782361382"
@@ -18,7 +19,13 @@ st.title("Smart Trash - QR Generator")
 
 # ===== NORMALISASI NO HP =====
 def normalize(phone):
-    phone = str(phone).replace("+62", "0").strip()
+    phone = str(phone).strip()
+    phone = re.sub(r"\.0$", "", phone)
+    phone = re.sub(r"\D", "", phone)
+    if phone.startswith("62"):
+        phone = "0" + phone[2:]
+    elif phone and not phone.startswith("0"):
+        phone = "0" + phone
     return phone
 
 df['No_HP'] = df['No_HP'].astype(str).apply(normalize)
