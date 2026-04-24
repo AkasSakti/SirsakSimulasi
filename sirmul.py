@@ -5,6 +5,7 @@ from io import BytesIO
 import random
 import string
 import re
+from urllib.parse import unquote
 
 # LINK CSV GOOGLE SHEET
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1k5WjvGAOv30qMrOaJaxlyNhjQaN-x5-yeUIbOCPC25s/export?format=csv&gid=782361382"
@@ -27,6 +28,13 @@ def normalize(phone):
     elif phone and not phone.startswith("0"):
         phone = "0" + phone
     return phone
+
+def format_sir_point(sir_point):
+    sir_point = str(sir_point).strip()
+    match = re.search(r"/maps/place/([^/@?]+)", sir_point)
+    if match:
+        return unquote(match.group(1)).replace("+", " ")
+    return sir_point
 
 df['No_HP'] = df['No_HP'].astype(str).apply(normalize)
 
@@ -62,7 +70,8 @@ if phone:
         qr.save(buf)
         buf.seek(0)
 
-        st.success(f"User: {user_data['Nama']}")
+        sir_point = format_sir_point(user_data.get("Sir_Point", ""))
+        st.success(f"Terimakasih {user_data['Nama']} telah membuang sampah di SirclePoint {sir_point}")
         st.image(buf)
 
         # Optional debug
