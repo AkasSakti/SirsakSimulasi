@@ -5,10 +5,14 @@ from io import BytesIO
 import random
 import string
 import re
+from pathlib import Path
 from urllib.parse import unquote
 
 # LINK CSV GOOGLE SHEET
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1k5WjvGAOv30qMrOaJaxlyNhjQaN-x5-yeUIbOCPC25s/export?format=csv&gid=782361382"
+APP_DIR = Path(__file__).parent
+LOGO_SIRSAK = APP_DIR / "gbr" / "sirsak.jpg"
+LOGO_POLIJE = APP_DIR / "gbr" / "polije.png"
 
 @st.cache_data(ttl=60)
 def load_data():
@@ -16,7 +20,13 @@ def load_data():
 
 df = load_data()
 
-st.title("SircleBox - QR Generator")
+logo_left, title_col, logo_right = st.columns([1, 4, 1], vertical_alignment="center")
+with logo_left:
+    st.image(LOGO_SIRSAK, width=80)
+with title_col:
+    st.markdown("<h1 style='text-align: center;'>SircleBox - QR Generator</h1>", unsafe_allow_html=True)
+with logo_right:
+    st.image(LOGO_POLIJE, width=80)
 
 # ===== NORMALISASI NO HP =====
 def normalize(phone):
