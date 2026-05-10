@@ -1,4 +1,5 @@
 streamlit
 pandas
 qrcode[pil]
-pillow
+gspread
+google-auth
