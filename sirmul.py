@@ -10,6 +10,7 @@ from urllib.parse import unquote
 
 import pandas as pd
 import qrcode
+import requests
 import streamlit as st
 
 try:
@@ -121,8 +122,13 @@ def google_sheets_enabled():
     return bool(
         gspread
         and Credentials
+        and get_secret_value("google_sheets", "enable_service_account", "false").lower() == "true"
         and get_secret_value("gcp_service_account", "client_email")
     )
+
+
+def apps_script_enabled():
+    return bool(get_secret_value("apps_script", "web_app_url"))
 
 
 @st.cache_resource
@@ -175,7 +181,24 @@ def append_google_row(kind, row, columns):
     worksheet.append_row([row.get(column, "") for column in columns], value_input_option="USER_ENTERED")
 
 
+def append_apps_script_row(kind, row):
+    url = get_secret_value("apps_script", "web_app_url")
+    secret = get_secret_value("apps_script", "secret", "")
+    payload = {
+        "kind": kind,
+        "secret": secret,
+        "row": row,
+    }
+    response = requests.post(url, json=payload, timeout=15)
+    response.raise_for_status()
+    data = response.json()
+    if not data.get("ok"):
+        raise RuntimeError(data.get("error", "Apps Script write failed"))
+
+
 def storage_label():
+    if apps_script_enabled():
+        return "Google Sheets via Apps Script"
     if google_sheets_enabled():
         spreadsheet_id = get_secret_value("google_sheets", "spreadsheet_id", DEFAULT_SPREADSHEET_ID)
         worksheet = get_secret_value("google_sheets", "intake_worksheet", DEFAULT_INTAKE_WORKSHEET)
@@ -218,10 +241,22 @@ def load_users():
 
 
 def save_user(user_data):
-    if google_sheets_enabled():
-        append_google_row("user", user_data, USER_COLUMNS)
-    else:
-        save_local_user(user_data)
+    if apps_script_enabled():
+        try:
+            append_apps_script_row("user", user_data)
+            load_users.clear()
+            return
+        except Exception as exc:
+            st.warning(f"Gagal menyimpan user ke Apps Script, memakai CSV lokal. Detail: {exc}")
+    elif google_sheets_enabled():
+        try:
+            append_google_row("user", user_data, USER_COLUMNS)
+            load_users.clear()
+            return
+        except Exception as exc:
+            st.warning(f"Gagal menyimpan user ke Google Sheets, memakai CSV lokal. Detail: {exc}")
+
+    save_local_user(user_data)
     load_users.clear()
 
 
@@ -246,9 +281,19 @@ def read_intakes():
 
 
 def save_intake(intake):
+    if apps_script_enabled():
+        try:
+            append_apps_script_row("intake", intake)
+            return
+        except Exception as exc:
+            st.warning(f"Gagal menyimpan intake ke Apps Script, memakai CSV lokal. Detail: {exc}")
+
     if google_sheets_enabled():
-        append_google_row("intake", intake, INTAKE_COLUMNS)
-        return
+        try:
+            append_google_row("intake", intake, INTAKE_COLUMNS)
+            return
+        except Exception as exc:
+            st.warning(f"Gagal menyimpan intake ke Google Sheets, memakai CSV lokal. Detail: {exc}")
 
     DATA_DIR.mkdir(exist_ok=True)
     intakes = read_intakes()
