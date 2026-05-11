@@ -22,12 +22,12 @@ except ImportError:
 
 
 # Default Google Sheet: data_simulsak
-DEFAULT_SPREADSHEET_ID = "1MqVCR_cWp2Gvk_JEgZymDpmpdciFI9lOvDIk4RubgvY"
+DEFAULT_SPREADSHEET_ID = "1qOlXCe7mGOCJPl4XFgyufUlK-kgc4J2dDHlv1KTBcsM"
 DEFAULT_USER_WORKSHEET = "data_user_sirsak"
 DEFAULT_INTAKE_WORKSHEET = "data_intake_sirsak"
 USER_CSV_URL = (
     "https://docs.google.com/spreadsheets/d/"
-    f"{DEFAULT_SPREADSHEET_ID}/export?format=csv&gid=1994936668"
+    f"{DEFAULT_SPREADSHEET_ID}/export?format=csv&gid=0"
 )
 
 APP_DIR = Path(__file__).parent
