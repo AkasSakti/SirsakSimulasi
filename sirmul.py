@@ -184,14 +184,24 @@ def append_google_row(kind, row, columns):
 def append_apps_script_row(kind, row):
     url = get_secret_value("apps_script", "web_app_url")
     secret = get_secret_value("apps_script", "secret", "")
+    spreadsheet_id = get_secret_value("google_sheets", "spreadsheet_id", DEFAULT_SPREADSHEET_ID)
     payload = {
         "kind": kind,
         "secret": secret,
+        "spreadsheet_id": spreadsheet_id,
+        "user_worksheet": get_secret_value("google_sheets", "user_worksheet", DEFAULT_USER_WORKSHEET),
+        "intake_worksheet": get_secret_value("google_sheets", "intake_worksheet", DEFAULT_INTAKE_WORKSHEET),
         "row": row,
     }
     response = requests.post(url, json=payload, timeout=15)
-    response.raise_for_status()
-    data = response.json()
+    if response.status_code >= 400:
+        detail = response.text[:500].strip()
+        raise RuntimeError(f"HTTP {response.status_code}: {detail}")
+    try:
+        data = response.json()
+    except ValueError as exc:
+        detail = response.text[:500].strip()
+        raise RuntimeError(f"Respons Apps Script bukan JSON valid: {detail}") from exc
     if not data.get("ok"):
         raise RuntimeError(data.get("error", "Apps Script write failed"))
 
